@@ -143,4 +143,5 @@ src/main.o: src/main.cpp include/glad/glad.h include/KHR/khrplatform.h \
  include/glm/glm/gtc/../ext/matrix_clip_space.inl \
  include/glm/glm/gtc/../ext/matrix_transform.hpp \
  include/glm/glm/gtc/../ext/matrix_transform.inl \
- include/glm/glm/gtc/matrix_transform.inl include/stb_image.h
+ include/glm/glm/gtc/matrix_transform.inl include/stb_image.h \
+ include/grass.h

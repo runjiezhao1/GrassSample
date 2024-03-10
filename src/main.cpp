@@ -6,8 +6,9 @@
 #include "camera.h"
 #include <filesystem>
 #include "stb_image.h"
-namespace fs = std::filesystem;
+#include "grass.h"
 
+namespace fs = std::filesystem;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -35,8 +36,8 @@ int main()
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -76,9 +77,71 @@ int main()
     // -------------------------
     Shader shader("./glsl/cube.vert.glsl", "./glsl/cube.frag.glsl");
     Shader skyboxShader("./glsl/skybox.vert.glsl", "./glsl/skybox.frag.glsl");
-
+    Shader tessHeightMapShader("./glsl/8.3.gpuheight.vs","./glsl/8.3.gpuheight.fs", nullptr, "./glsl/8.3.gpuheight.tcs", "./glsl/8.3.gpuheight.tes");
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+    std::string parentDir1 = fs::current_path().string() + "\\img\\tyberos.jpg";
+    unsigned char *data = stbi_load("img/iceland_heightmap.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        tessHeightMapShader.setInt("heightMap", 0);
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    std::vector<float> vertices;
+
+    unsigned rez = 20;
+    for(unsigned i = 0; i <= rez-1; i++)
+    {
+        for(unsigned j = 0; j <= rez-1; j++)
+        {
+            vertices.push_back(-width/2.0f + width*i/(float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height/2.0f + height*j/(float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
+
+            vertices.push_back(-width/2.0f + width*(i+1)/(float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height/2.0f + height*j/(float)rez); // v.z
+            vertices.push_back((i+1) / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
+
+            vertices.push_back(-width/2.0f + width*i/(float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height/2.0f + height*(j+1)/(float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back((j+1) / (float)rez); // v
+
+            vertices.push_back(-width/2.0f + width*(i+1)/(float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height/2.0f + height*(j+1)/(float)rez); // v.z
+            vertices.push_back((i+1) / (float)rez); // u
+            vertices.push_back((j+1) / (float)rez); // v
+        }
+    }
+
     float cubeVertices[] = {
         // positions          // texture Coords
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -179,6 +242,7 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -188,6 +252,53 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    
+    // grass VAO and VBO
+    unsigned int terrainVAO, terrainVBO;
+    glGenVertexArrays(1, &terrainVAO);
+    glBindVertexArray(terrainVAO);
+
+    glGenBuffers(1, &terrainVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texCoord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
+
+    //glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+
+    // shader storage buffer is used to store struct
+    // unsigned int grassVAO, grassVBO;
+    // glGenVertexArrays(1, &grassVAO);
+    // glGenBuffers(1, &grassVBO);
+    // glBindVertexArray(grassVAO);
+    // glBindBuffer(GL_SHADER_STORAGE_BUFFER, grassVBO);
+    // glBufferData(GL_SHADER_STORAGE_BUFFER,
+    //            static_cast<GLsizei>(blades.size() * sizeof(blade)),
+    //            blades.data(), GL_DYNAMIC_COPY);
+    // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, grassVBO);
+    // //assign v0
+    // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
+    //                     reinterpret_cast<void*>(offsetof(blade, v0)));
+    // glEnableVertexAttribArray(0);
+    // // v1 attribute
+    // glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
+    //                     reinterpret_cast<void*>(offsetof(blade, v1)));
+    // glEnableVertexAttribArray(1);
+
+    // // v2 attribute
+    // glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
+    //                     reinterpret_cast<void*>(offsetof(blade, v2)));
+    // glEnableVertexAttribArray(2);
+
+    // // dir attribute
+    // glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
+    //                     reinterpret_cast<void*>(offsetof(blade, up)));
+    // glEnableVertexAttribArray(3);
 
     // load textures
     // -------------
@@ -213,6 +324,8 @@ int main()
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
+
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -247,7 +360,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
-        // draw skybox as last
+        // draw skybox
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
@@ -261,6 +374,22 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+        //draw tess
+        tessHeightMapShader.use();
+
+        // view/projection transformations
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+        view = camera.GetViewMatrix();
+        tessHeightMapShader.setMat4("projection", projection);
+        tessHeightMapShader.setMat4("view", view);
+
+        // world transformation
+        model = glm::mat4(1.0f);
+        tessHeightMapShader.setMat4("model", model);
+
+        // render the terrain
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_PATCHES, 0, 4*rez*rez);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
