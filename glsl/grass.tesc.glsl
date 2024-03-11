@@ -31,19 +31,19 @@ void main() {
 
   //less tessellation when far and more when near
   if (z1 < 0.8 && z2 < 0.8) {
-    gl_TessLevelInner[0] = 12.0;
-    gl_TessLevelInner[1] = 17.0;
-    gl_TessLevelOuter[0] = 17.0;
-    gl_TessLevelOuter[1] = 12.0;
-    gl_TessLevelOuter[2] = 17.0;
-    gl_TessLevelOuter[3] = 12.0;
+    gl_TessLevelInner[0] = 22.0;
+    gl_TessLevelInner[1] = 27.0;
+    gl_TessLevelOuter[0] = 27.0;
+    gl_TessLevelOuter[1] = 22.0;
+    gl_TessLevelOuter[2] = 27.0;
+    gl_TessLevelOuter[3] = 22.0;
   } else {
-    gl_TessLevelInner[0] = 1.0;
-    gl_TessLevelInner[1] = 3.0;
-    gl_TessLevelOuter[0] = 3.0;
-    gl_TessLevelOuter[1] = 1.0;
-    gl_TessLevelOuter[2] = 3.0;
-    gl_TessLevelOuter[3] = 1.0;
+    gl_TessLevelInner[0] = 21.0;
+    gl_TessLevelInner[1] = 23.0;
+    gl_TessLevelOuter[0] = 23.0;
+    gl_TessLevelOuter[1] = 21.0;
+    gl_TessLevelOuter[2] = 23.0;
+    gl_TessLevelOuter[3] = 21.0;
   }
 
 }

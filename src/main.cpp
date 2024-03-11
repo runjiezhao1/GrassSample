@@ -333,8 +333,6 @@ int main()
 
 
     glPatchParameteri(GL_PATCH_VERTICES, 1);
-    // render loop
-    // -----------
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
@@ -396,6 +394,8 @@ int main()
         tessHeightMapShader.use();
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
         view = camera.GetViewMatrix();
+        tessHeightMapShader.setFloat("deltaTime",deltaTime);
+        tessHeightMapShader.setFloat("currentTime",currentFrame);
         tessHeightMapShader.setMat4("proj", projection);
         tessHeightMapShader.setMat4("view", view);
         model = glm::mat4(1.0f);

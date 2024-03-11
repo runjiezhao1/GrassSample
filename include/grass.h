@@ -32,34 +32,36 @@ std::vector<float> grass::generateBlades(){
     std::vector<float> grassLand;
     for(int i = 0; i < 20; i++){
         for(int j = 0; j < 20; j++){
+            float posx = i + (rand() % 10) / 10.f;
+            float posy = j + (rand() % 10) / 10.f;
             //generate v0
             float height = (rand() % 20 + 10.0f) / 10.f;
             //x pos
-            grassLand.push_back(i);
+            grassLand.push_back(posx);
             //y pos
             grassLand.push_back(0);
             //z pos
-            grassLand.push_back(j);
-            //radius
-            grassLand.push_back((rand() % 30 + 20.0f) / 10.f);
+            grassLand.push_back(posy);
+            //orientation of grass
+            grassLand.push_back((rand() % 314) / 100.f);
             //generate v1
             //x pos
-            grassLand.push_back(i);
+            grassLand.push_back(posx);
             //y pos
             grassLand.push_back(height);
             //z pos
-            grassLand.push_back(j);
+            grassLand.push_back(posy);
             //radius
             grassLand.push_back(height);
             //generate v2
             //x pos
-            grassLand.push_back(i);
+            grassLand.push_back(posx);
             //y pos
             grassLand.push_back(height);
             //z pos
-            grassLand.push_back(j);
+            grassLand.push_back(posy);
             //radius
-            grassLand.push_back(2.0f);
+            grassLand.push_back(0.5f);
             //generate up
             //x pos
             grassLand.push_back(0);
