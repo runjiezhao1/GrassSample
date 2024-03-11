@@ -1,21 +1,20 @@
 #version 450 core
 
-layout(binding = 0) uniform CameraBufferObject {
-    mat4 view;
-    mat4 proj;
-} camera;
+// layout(binding = 0) uniform CameraBufferObject {
+//     mat4 view;
+//     mat4 proj;
+// } camera;
 
-in TESE_OUT
-{
-  vec3 normal;
-  vec2 uv;
-} frag_in;
+
+in vec3 normal;
+in vec2 uv;
+
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-  vec3 normal = frag_in.normal;
-  vec2 uv = frag_in.uv;
+  vec3 normal = normal;
+  vec2 uv = uv;
 
   vec3 upperColor = vec3(0.4,1,0.1);
   vec3 lowerColor = vec3(0.0,0.2,0.1);

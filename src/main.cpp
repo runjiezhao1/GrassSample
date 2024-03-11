@@ -46,7 +46,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "GrassSample", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -77,7 +77,8 @@ int main()
     // -------------------------
     Shader shader("./glsl/cube.vert.glsl", "./glsl/cube.frag.glsl");
     Shader skyboxShader("./glsl/skybox.vert.glsl", "./glsl/skybox.frag.glsl");
-    Shader tessHeightMapShader("./glsl/8.3.gpuheight.vs","./glsl/8.3.gpuheight.fs", nullptr, "./glsl/8.3.gpuheight.tcs", "./glsl/8.3.gpuheight.tes");
+    //Shader tessHeightMapShader("./glsl/8.3.gpuheight.vs","./glsl/8.3.gpuheight.fs", nullptr, "./glsl/8.3.gpuheight.tcs", "./glsl/8.3.gpuheight.tes");
+    Shader tessHeightMapShader("./glsl/grass.vert.glsl","./glsl/grass.frag.glsl", nullptr, "./glsl/grass.tesc.glsl", "./glsl/grass.tese.glsl");
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     unsigned int texture;
@@ -93,7 +94,6 @@ int main()
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    std::string parentDir1 = fs::current_path().string() + "\\img\\tyberos.jpg";
     unsigned char *data = stbi_load("img/iceland_heightmap.png", &width, &height, &nrChannels, 0);
     if (data)
     {
@@ -111,7 +111,7 @@ int main()
 
     std::vector<float> vertices;
 
-    unsigned rez = 20;
+    unsigned rez = 10;
     for(unsigned i = 0; i <= rez-1; i++)
     {
         for(unsigned j = 0; j <= rez-1; j++)
@@ -186,6 +186,20 @@ int main()
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
+
+    // float grassVertices[] = {
+    //     0.0f, 0.0f, 0.0f, 3.0f,
+    //     1.0f, 1.0f, 1.0f, 5.0f,
+    //     0.f, 2.0f, 3.0f, 2.0f,
+    //     0.0f,1.0f,0.0f,0.36f,
+    //     -1.0f, -1.0f, -1.0f, 3.0f,
+    //     1.0f, 1.0f, 1.0f, 5.0f,
+    //     0.f, 2.0f, 3.0f, 2.0f,
+    //     0.0f,1.0f,0.0f,0.36f
+    // };
+
+    std::vector<float> grassVertices = grass::generateBlades();
+    
     float skyboxVertices[] = {
         // positions          
         -1.0f,  1.0f, -1.0f,
@@ -254,51 +268,44 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     
     // grass VAO and VBO
-    unsigned int terrainVAO, terrainVBO;
-    glGenVertexArrays(1, &terrainVAO);
-    glBindVertexArray(terrainVAO);
+    // unsigned int terrainVAO, terrainVBO;
+    // glGenVertexArrays(1, &terrainVAO);
+    // glBindVertexArray(terrainVAO);
 
-    glGenBuffers(1, &terrainVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+    // glGenBuffers(1, &terrainVBO);
+    // glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // texCoord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(1);
+    // // position attribute
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+    // // texCoord attribute
+    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+    // glEnableVertexAttribArray(1);
 
     //glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
 
     // shader storage buffer is used to store struct
-    // unsigned int grassVAO, grassVBO;
-    // glGenVertexArrays(1, &grassVAO);
-    // glGenBuffers(1, &grassVBO);
-    // glBindVertexArray(grassVAO);
-    // glBindBuffer(GL_SHADER_STORAGE_BUFFER, grassVBO);
-    // glBufferData(GL_SHADER_STORAGE_BUFFER,
-    //            static_cast<GLsizei>(blades.size() * sizeof(blade)),
-    //            blades.data(), GL_DYNAMIC_COPY);
-    // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, grassVBO);
-    // //assign v0
-    // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
-    //                     reinterpret_cast<void*>(offsetof(blade, v0)));
-    // glEnableVertexAttribArray(0);
-    // // v1 attribute
-    // glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
-    //                     reinterpret_cast<void*>(offsetof(blade, v1)));
-    // glEnableVertexAttribArray(1);
+    unsigned int grassVAO, grassVBO;
+    glGenVertexArrays(1, &grassVAO);
+    glBindVertexArray(grassVAO);
 
-    // // v2 attribute
-    // glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
-    //                     reinterpret_cast<void*>(offsetof(blade, v2)));
-    // glEnableVertexAttribArray(2);
+    glGenBuffers(1, &grassVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * grassVertices.size(), &grassVertices[0], GL_STATIC_DRAW);
 
-    // // dir attribute
-    // glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(blade),
-    //                     reinterpret_cast<void*>(offsetof(blade, up)));
-    // glEnableVertexAttribArray(3);
+    // v0 attribute
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // v1 attribute
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(sizeof(float) * 4));
+    glEnableVertexAttribArray(1);
+    // v2 attribute
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(sizeof(float) * 8));
+    glEnableVertexAttribArray(2);
+    // v3 attribute
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(sizeof(float) * 12));
+    glEnableVertexAttribArray(3);
 
     // load textures
     // -------------
@@ -325,7 +332,7 @@ int main()
     skyboxShader.setInt("skybox", 0);
 
 
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glPatchParameteri(GL_PATCH_VERTICES, 1);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -375,21 +382,27 @@ int main()
         glDepthFunc(GL_LESS); // set depth function back to default
 
         //draw tess
-        tessHeightMapShader.use();
+        // tessHeightMapShader.use();
+        // projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+        // view = camera.GetViewMatrix();
+        // tessHeightMapShader.setMat4("projection", projection);
+        // tessHeightMapShader.setMat4("view", view);
+        // model = glm::mat4(1.0f);
+        // tessHeightMapShader.setMat4("model", model);
+        // glBindVertexArray(terrainVAO);
+        // glDrawArrays(GL_PATCHES, 0, 4*rez*rez);
 
-        // view/projection transformations
+        // draw grass
+        tessHeightMapShader.use();
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
         view = camera.GetViewMatrix();
-        tessHeightMapShader.setMat4("projection", projection);
+        tessHeightMapShader.setMat4("proj", projection);
         tessHeightMapShader.setMat4("view", view);
-
-        // world transformation
         model = glm::mat4(1.0f);
         tessHeightMapShader.setMat4("model", model);
+        glBindVertexArray(grassVAO);
+        glDrawArrays(GL_PATCHES, 0, 400);
 
-        // render the terrain
-        glBindVertexArray(terrainVAO);
-        glDrawArrays(GL_PATCHES, 0, 4*rez*rez);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
