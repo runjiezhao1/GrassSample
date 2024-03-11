@@ -77,73 +77,9 @@ int main()
     // -------------------------
     Shader shader("./glsl/cube.vert.glsl", "./glsl/cube.frag.glsl");
     Shader skyboxShader("./glsl/skybox.vert.glsl", "./glsl/skybox.frag.glsl");
-    //Shader tessHeightMapShader("./glsl/8.3.gpuheight.vs","./glsl/8.3.gpuheight.fs", nullptr, "./glsl/8.3.gpuheight.tcs", "./glsl/8.3.gpuheight.tes");
     Shader tessHeightMapShader("./glsl/grass.vert.glsl","./glsl/grass.frag.glsl", nullptr, "./glsl/grass.tesc.glsl", "./glsl/grass.tese.glsl");
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char *data = stbi_load("img/iceland_heightmap.png", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        tessHeightMapShader.setInt("heightMap", 0);
-        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-
-    std::vector<float> vertices;
-
-    unsigned rez = 10;
-    for(unsigned i = 0; i <= rez-1; i++)
-    {
-        for(unsigned j = 0; j <= rez-1; j++)
-        {
-            vertices.push_back(-width/2.0f + width*i/(float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height/2.0f + height*j/(float)rez); // v.z
-            vertices.push_back(i / (float)rez); // u
-            vertices.push_back(j / (float)rez); // v
-
-            vertices.push_back(-width/2.0f + width*(i+1)/(float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height/2.0f + height*j/(float)rez); // v.z
-            vertices.push_back((i+1) / (float)rez); // u
-            vertices.push_back(j / (float)rez); // v
-
-            vertices.push_back(-width/2.0f + width*i/(float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height/2.0f + height*(j+1)/(float)rez); // v.z
-            vertices.push_back(i / (float)rez); // u
-            vertices.push_back((j+1) / (float)rez); // v
-
-            vertices.push_back(-width/2.0f + width*(i+1)/(float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height/2.0f + height*(j+1)/(float)rez); // v.z
-            vertices.push_back((i+1) / (float)rez); // u
-            vertices.push_back((j+1) / (float)rez); // v
-        }
-    }
 
     float cubeVertices[] = {
-        // positions          // texture Coords
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
          0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
          0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -186,17 +122,6 @@ int main()
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
-
-    // float grassVertices[] = {
-    //     0.0f, 0.0f, 0.0f, 3.0f,
-    //     1.0f, 1.0f, 1.0f, 5.0f,
-    //     0.f, 2.0f, 3.0f, 2.0f,
-    //     0.0f,1.0f,0.0f,0.36f,
-    //     -1.0f, -1.0f, -1.0f, 3.0f,
-    //     1.0f, 1.0f, 1.0f, 5.0f,
-    //     0.f, 2.0f, 3.0f, 2.0f,
-    //     0.0f,1.0f,0.0f,0.36f
-    // };
 
     std::vector<float> grassVertices = grass::generateBlades();
     
@@ -267,25 +192,6 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     
-    // grass VAO and VBO
-    // unsigned int terrainVAO, terrainVBO;
-    // glGenVertexArrays(1, &terrainVAO);
-    // glBindVertexArray(terrainVAO);
-
-    // glGenBuffers(1, &terrainVBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-    // // position attribute
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    // glEnableVertexAttribArray(0);
-    // // texCoord attribute
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
-    // glEnableVertexAttribArray(1);
-
-    //glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
-
-    // shader storage buffer is used to store struct
     unsigned int grassVAO, grassVBO;
     glGenVertexArrays(1, &grassVAO);
     glBindVertexArray(grassVAO);
@@ -366,9 +272,9 @@ int main()
         glBindVertexArray(0);
 
         // draw skybox
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthFunc(GL_LEQUAL); 
         skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
@@ -377,18 +283,8 @@ int main()
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
-
-        //draw tess
-        // tessHeightMapShader.use();
-        // projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
-        // view = camera.GetViewMatrix();
-        // tessHeightMapShader.setMat4("projection", projection);
-        // tessHeightMapShader.setMat4("view", view);
-        // model = glm::mat4(1.0f);
-        // tessHeightMapShader.setMat4("model", model);
-        // glBindVertexArray(terrainVAO);
-        // glDrawArrays(GL_PATCHES, 0, 4*rez*rez);
+        // set depth function back to default
+        glDepthFunc(GL_LESS); 
 
         // draw grass
         tessHeightMapShader.use();

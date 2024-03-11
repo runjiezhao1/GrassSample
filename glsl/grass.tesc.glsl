@@ -16,8 +16,6 @@ out vec4 tv2[];
 out vec4 tup[];
 out vec4 tdir[];
 
-
-
 void main() {
   gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
