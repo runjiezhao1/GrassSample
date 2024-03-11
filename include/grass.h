@@ -30,10 +30,10 @@ grass::~grass()
 
 std::vector<float> grass::generateBlades(){
     std::vector<float> grassLand;
-    for(int i = 0; i < 20; i++){
-        for(int j = 0; j < 20; j++){
-            float posx = i + (rand() % 10) / 10.f;
-            float posy = j + (rand() % 10) / 10.f;
+    for(int i = 0; i < 200; i++){
+        for(int j = 0; j < 200; j++){
+            float posx = (i + (rand() % 10) / 10.f) / 3.f;
+            float posy = (j + (rand() % 10) / 10.f) / 3.f;
             //generate v0
             float height = (rand() % 20 + 10.0f) / 10.f;
             //x pos

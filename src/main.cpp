@@ -297,7 +297,7 @@ int main()
         model = glm::mat4(1.0f);
         tessHeightMapShader.setMat4("model", model);
         glBindVertexArray(grassVAO);
-        glDrawArrays(GL_PATCHES, 0, 400);
+        glDrawArrays(GL_PATCHES, 0, 200*200);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
